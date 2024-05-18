@@ -965,7 +965,9 @@ def process_HL(folder):
     experimenter = 'Chaudhary, Shivesh'
     experiment_descrip = 'NeuroPAL whole-brain structural images'
 
-    nwbfile = gen_file('C. elegans head NeuroPAL', experimenter, experiment_descrip, worm, session_start, 'Lu Lab', 'Georgia Tech University', ["Graphical-model framework for automated annotation of cell identities in dense cellular images"])
+    nwbfile = gen_file('C. elegans head NeuroPAL', experimenter, experiment_descrip, worm, 
+                       session_start, 'Lu Lab', 'Georgia Tech University', 
+                       ["Graphical-model framework for automated annotation of cell identities in dense cellular images"])
 
     subject_description = 'NeuroPAL worm in microfluidic chip'
     dob = session_start - timedelta(days=2)

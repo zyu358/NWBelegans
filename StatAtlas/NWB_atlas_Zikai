@@ -1,0 +1,363 @@
+import Atlas.Atlas
+from Atlas.Atlas import Atlas as Atl
+import AUtils
+from AUtils import Simulator
+from AUtils import load_NWB
+import numpy as np
+import pickle
+import pandas as pd
+import matplotlib.pyplot as plt
+import os
+import pynwb
+import remfile
+import h5py
+
+from Neurons import Neuron, Image
+import pyro.distributions as dist
+from scipy.io import loadmat
+import numpy as np
+import os
+from pynwb import NWBHDF5IO
+import pandas as pd
+import h5py
+from dandi.dandiapi import DandiAPIClient
+import remfile
+from tqdm import tqdm
+from pynwb import (
+    load_namespaces,
+    get_class,
+    register_class,
+    NWBFile,
+    TimeSeries,
+    NWBHDF5IO,
+)
+
+from dandi.dandiapi import DandiAPIClient
+
+Kato_ref = {
+    "55_YApDV": "original",
+    "56_YAaDV": "original",
+    "38_YAaDV": "original",
+    "70_YApLR": "original",
+    "20_YApLR": "original",
+    "62_YApLR": "original",
+    "7_YApLR": "original",
+    "76_YAaDV": "original",
+    "11_YAaLR": "original",
+    "64_YAaDV": "original",
+    "76_YApDV": "original",
+    "11_YApLR": "original",
+    "64_YApDV": "original",
+    "70_YAaLR": "original",
+    "56_YApDV": "original",
+    "38_YApDV": "original",
+    "55_YAaDV": "original",
+    "7_YAaLR": "original",
+    "62_YAaLR": "original",
+    "20_YAaLR": "original",
+    "2": 0,
+    "3": 1,
+    "1": 2,
+    "4": 3,
+    "5": 4,
+    "7": 0,
+    "6": 1,
+    "8": 2,
+    "9": 3,
+    "20190928_08": 0,
+    "20190929_02": 1,
+    "20190929_03": 2,
+    "20190925_01": 3,
+    "20191030_07": 4,
+    "20190925_04": 0,
+    "20191030_03": 1,
+    "20190929_05": 2,
+    "20190929_07": 3,
+    "20190929_06": 4,
+    "20191104_10": 0,
+    "20191104_08": 1,
+    "20190924_01": 2,
+    "20190928_01": 3,
+    "20190928_03": 4,
+    "20190924_03": 0,
+    "20190924_02": 1,
+    "20190928_13": 2,
+    "20190928_07": 3,
+    "20190928_11": 4,
+    "20190928_05": 0,
+    "2021-12-03-w00-NP1": 0,
+    "2022-03-05-w00-NP1": 1,
+    "2022-02-12-w00-NP1": 2,
+    "2022-02-22-w04-NP1": 3,
+    "2022-02-11-w03-NP1": 4,
+    "2022-02-12-w01-NP1": 0,
+    "2022-01-22-w04-NP1": 1,
+    "2022-04-26-w01-NP1": 2,
+    "2022-04-26-w00-NP1": 3,
+    "2022-04-01-w00-NP1": 4,
+    "20230412-20-15-17": 0,
+    "20230506-14-24-57": 1,
+    "20230510-13-25-46": 2,
+    "20230322-22-43-03": 3,
+    "20221106-21-47-31": 4,
+    "20230506-12-56-00": 0,
+    "20221106-21-00-09": 1,
+    "20230322-20-16-50": 2,
+    "20221028-18-48-00": 3,
+    "20230506-15-33-51": 4,
+    "20230510-15-49-47": 0,
+    "20230904-15-09-05": 1,
+    "20221215-20-02-49": 2,
+    "20230909-16-48-09": 3,
+    "20230904-14-30-52": 4,
+    "20230322-21-41-10": 0,
+    "20221106-21-23-19": 1,
+    "20230506-15-01-45": 2,
+    "20230510-12-53-34": 3,
+    "20230904-15-59-40": 4,
+    "20230322-18-57-04": 0,
+    "20230918-17-21-0": 0,
+    "20231013-9-30-0": 1,
+    "20231013-11-11-0": 2,
+    "20230928-11-14-0": 3,
+    "20230928-14-27-0": 4,
+    "20230928-16-0-0": 0,
+    "20230918-9-54-0": 1,
+    "20231013-13-28-0": 2,
+    "20230918-13-21-0": 3,
+    "2023-01-13-07": 0,
+    "2023-01-16-22": 1,
+    "2022-08-02-01": 2,
+    "2023-01-16-08": 3,
+    "2023-01-06-08": 4,
+    "2022-12-21-06": 0,
+    "2023-01-09-28": 1,
+    "2023-01-17-14": 2,
+    "2023-01-05-01": 3,
+    "2023-01-17-01": 4,
+    "2023-01-09-15": 0,
+    "2022-07-15-12": 1,
+    "2022-07-15-06": 2,
+    "2023-01-17-07": 3,
+    "2023-01-23-01": 4,
+    "2023-01-23-15": 0,
+    "2023-01-19-15": 1,
+    "2022-07-26-01": 2,
+    "2023-01-10-14": 3,
+    "2022-06-14-13": 4,
+    "2022-06-14-07": 0,
+    "2023-01-09-08": 1,
+    "2023-01-09-22": 2,
+    "2023-01-19-22": 3,
+    "2022-06-14-01": 4,
+    "2023-01-10-07": 0,
+    "2023-01-23-08": 1,
+    "2023-01-05-18": 2,
+    "2023-01-23-21": 3,
+    "2023-01-19-08": 4,
+    "2022-06-28-07": 0,
+    "2023-01-16-15": 1,
+    "2023-01-16-01": 2,
+    "2022-07-20-01": 3,
+    "2023-01-06-01": 4,
+    "2023-01-18-01": 0,
+    "2022-06-28-01": 1,
+    "2023-03-07-01": 2,
+}
+
+skip_files = [
+    "20231013-9-30-0",
+    "20230412-20-15-17",
+    "2023-01-23-01",
+    "20239828-11-14-0",
+    "2023-01-05-01",
+    "2023-01-10-14",
+    "2022-06-28-07",
+    "2022-07-26-01",
+    "2023-01-19-15",
+    "2022-07-15-06",
+    "2022-08-02-01",
+    "2023-01-09-08",
+    "2023-01-09-28",
+    "2023-01-10-14",
+    "2023-01-17-14",
+    "2023-01-19-22",
+    "2023-01-23-01",
+]
+
+
+# folders = ["NP_og", "HL", "EY", "SK2", "SK1", "KK", "SF"]
+# dandi_ids = ["000715", "000714", "000541", "000472", "000565", "000692", "000776"]
+# data_dict = dict()
+
+# for index, id in enumerate(dandi_ids):
+#     with DandiAPIClient() as client:
+#         dandiset = client.get_dandiset(id, "draft")
+#         files = list()
+#         for asset in dandiset.get_assets():
+#             s3_url = asset.get_content_url(follow_redirects=1, strip_query=True)
+#             file = remfile.File(s3_url)
+#             # print(asset.path)
+#             with h5py.File(file, "r") as f:
+#                 with NWBHDF5IO(file=f, mode="r", load_namespaces=True) as io:
+#                     read_nwb = io.read()
+#                     identifier = read_nwb.identifier
+#                     print(identifier)
+#                     files.append(identifier)
+
+#     data_dict["label"] = folders[index]
+#     data_dict["id"] = dandi_ids[index]
+#     data_dict["files"] = files
+
+
+bodypart = "head"
+datapath = "/Users/danielysprague/foco_lab/data/final_nwb"
+# folders = ["NP_og", "HL", "EY", "SK2", "SK1", "dandi:000776", "dandi:000692"]
+folders = [
+    "dandi:000715",
+    "dandi:000714",
+    "dandi:000541",
+    "dandi:000472",
+    "dandi:000565",
+    "dandi:000776",
+    "dandi:000692",
+]
+
+match = [True, False, False, False, False, False, False]
+ims_unmatched = load_NWB.load_NWB(
+    datapath,
+    folders,
+    match,
+    Kato_ref,
+    bodypart=bodypart,
+    histmatched=False,
+    skipfiles=skip_files,
+)
+
+
+# Simulate worms from the generative model
+
+# sub-56-YAaDV/sub-56-YAaDV_ophys.nwb
+# sub-38-YAaDV/sub-38-YAaDV_ophys.nwb
+# sub-11-YAaLR/sub-11-YAaLR_ophys.nwb
+# sub-55-YAaDV/sub-55-YAaDV_ophys.nwb
+# sub-20-YAaLR/sub-20-YAaLR_ophys.nwb
+# sub-62-YAaLR/sub-62-YAaLR_ophys.nwb
+# sub-70-YAaLR/sub-70-YAaLR_ophys.nwb
+# sub-7-YAaLR/sub-7-YAaLR_ophys.nwb
+# sub-64-YAaDV/sub-64-YAaDV_ophys.nwb
+# sub-76-YAaDV/sub-76-YAaDV_ophys.nwb
+# 000714XXXXXXXXXXXXXXXXXXXXXX
+# sub-5/sub-5_ophys.nwb
+# sub-4/sub-4_ophys.nwb
+# sub-2/sub-2_ophys.nwb
+# sub-1/sub-1_ophys.nwb
+# sub-7/sub-7_ophys.nwb
+# sub-6/sub-6_ophys.nwb
+# sub-8/sub-8_ophys.nwb
+# sub-3/sub-3_ophys.nwb
+# sub-9/sub-9_ophys.nwb
+# 000541XXXXXXXXXXXXXXXXXXXXXX
+# sub-20190924-01/sub-20190924-01_ses-20190924_ophys.nwb
+# sub-20190925-01/sub-20190925-01_ses-20190925_ophys.nwb
+# sub-20190924-02/sub-20190924-02_ses-20190924_ophys.nwb
+# sub-20190924-03/sub-20190924-03_ses-20190924_ophys.nwb
+# sub-20190925-04/sub-20190925-04_ses-20190925_ophys.nwb
+# sub-20190928-01/sub-20190928-01_ses-20190928_ophys.nwb
+# sub-20190928-05/sub-20190928-05_ses-20190928_ophys.nwb
+# sub-20190928-07/sub-20190928-07_ses-20190928_ophys.nwb
+# sub-20190928-08/sub-20190928-08_ses-20190928_ophys.nwb
+# sub-20190928-03/sub-20190928-03_ses-20190928_ophys.nwb
+# sub-20190928-11/sub-20190928-11_ses-20190928_ophys.nwb
+# sub-20190929-02/sub-20190929-02_ses-20190929_ophys.nwb
+# sub-20190929-03/sub-20190929-03_ses-20190929_ophys.nwb
+# sub-20190928-13/sub-20190928-13_ses-20190928_ophys.nwb
+# sub-20190929-05/sub-20190929-05_ses-20190929_ophys.nwb
+# sub-20190929-06/sub-20190929-06_ses-20190929_ophys.nwb
+# sub-20190929-07/sub-20190929-07_ses-20190929_ophys.nwb
+# sub-20191104-08/sub-20191104-08_ses-20191104_ophys.nwb
+# sub-20191030-03/sub-20191030-03_ses-20191030_ophys.nwb
+# sub-20191030-07/sub-20191030-07_ses-20191030_ophys.nwb
+# sub-20191104-10/sub-20191104-10_ses-20191104_ophys.nwb
+# 000472XXXXXXXXXXXXXXXXXXXXXX
+# sub-2022-02-11-w03-NP1/sub-2022-02-11-w03-NP1_ses-20220211_ophys.nwb
+# sub-2021-12-03-w00-NP1/sub-2021-12-03-w00-NP1_ses-20211203_ophys.nwb
+# sub-2022-02-12-w00-NP1/sub-2022-02-12-w00-NP1_ses-20220212_ophys.nwb
+# sub-2022-02-12-w01-NP1/sub-2022-02-12-w01-NP1_ses-20220212_ophys.nwb
+# sub-2022-01-22-w04-NP1/sub-2022-01-22-w04-NP1_ses-20220122_ophys.nwb
+# sub-2022-02-22-w04-NP1/sub-2022-02-22-w04-NP1_ses-20220222_ophys.nwb
+# sub-2022-04-01-w00-NP1/sub-2022-04-01-w00-NP1_ses-20220401_ophys.nwb
+# sub-2022-03-05-w00-NP1/sub-2022-03-05-w00-NP1_ses-20220305_ophys.nwb
+# sub-2022-04-26-w01-NP1/sub-2022-04-26-w01-NP1_ses-20220426_ophys.nwb
+# sub-2022-04-26-w00-NP1/sub-2022-04-26-w00-NP1_ses-20220426_ophys.nwb
+# 000565XXXXXXXXXXXXXXXXXXXXXX
+# sub-20221106-21-00-09/sub-20221106-21-00-09_ses-20221106T210009_ophys.nwb
+# sub-20221215-20-02-49/sub-20221215-20-02-49_ses-20221215T200249_ophys.nwb
+# sub-20221106-21-47-31/sub-20221106-21-47-31_ses-20221106T214731_ophys.nwb
+# sub-20221028-18-48-00/sub-20221028-18-48-00_ses-20221028T184800_ophys.nwb
+# sub-20221106-21-23-19/sub-20221106-21-23-19_ses-20221106T212319_ophys.nwb
+# sub-20230322-21-41-10/sub-20230322-21-41-10_ses-20230322T214110_ophys.nwb
+# sub-20230322-22-43-03/sub-20230322-22-43-03_ses-20230322T224303_ophys.nwb
+# sub-20230412-20-15-17/sub-20230412-20-15-17_ses-20230412T201517_ophys.nwb
+# sub-20230506-12-56-00/sub-20230506-12-56-00_ses-20230506T125600_ophys.nwb
+# sub-20230506-14-24-57/sub-20230506-14-24-57_ses-20230506T142457_ophys.nwb
+# sub-20230322-18-57-04/sub-20230322-18-57-04_ses-20230322T185704_ophys.nwb
+# sub-20230510-13-25-46/sub-20230510-13-25-46_ses-20230510T132546_ophys.nwb
+# sub-20230510-15-49-47/sub-20230510-15-49-47_ses-20230510T154947_ophys.nwb
+# sub-20230904-14-30-52/sub-20230904-14-30-52_ses-20230904T143052_ophys.nwb
+# sub-20230904-15-09-05/sub-20230904-15-09-05_ses-20230904T150905_ophys.nwb
+# sub-20230904-15-59-40/sub-20230904-15-59-40_ses-20230904T155940_ophys.nwb
+# sub-20230909-16-48-09/sub-20230909-16-48-09_ses-20230909T164809_ophys.nwb
+# sub-20230510-12-53-34/sub-20230510-12-53-34_ses-20230510T125334_ophys.nwb
+# sub-20230322-20-16-50/sub-20230322-20-16-50_ses-20230322T201650_ophys.nwb
+# sub-20230506-15-01-45/sub-20230506-15-01-45_ses-20230506T150145_ophys.nwb
+# sub-20230506-15-33-51/sub-20230506-15-33-51_ses-20230506T153351_ophys.nwb
+# 000692XXXXXXXXXXXXXXXXXXXXXX
+# sub-2308918-01/sub-2308918-01_ses-20230918T095400_ophys.nwb
+# sub-230928-03/sub-230928-03_ses-20230928T142700_ophys.nwb
+# sub-230928-02/sub-230928-02_ses-20230928T111400_ophys.nwb
+# sub-2308918-03/sub-2308918-03_ses-20230918T132100_ophys.nwb
+# sub-2308918-04/sub-2308918-04_ses-20230918T172100_ophys.nwb
+# sub-231013-01/sub-231013-01_ses-20231013T093000_ophys.nwb
+# sub-230928-04/sub-230928-04_ses-20230928T160000_ophys.nwb
+# sub-231013-03/sub-231013-03_ses-20231013T132800_ophys.nwb
+# sub-231013-02/sub-231013-02_ses-20231013T111100_ophys.nwb
+# 000776XXXXXXXXXXXXXXXXXXXXXX
+# sub-2022-06-14-07-SWF702/sub-2022-06-14-07-SWF702_ses-20220614_behavior+image+ophys.nwb
+# sub-2022-06-14-13-SWF702/sub-2022-06-14-13-SWF702_ses-20220614_behavior+image+ophys.nwb
+# sub-2022-06-28-07-SWF702/sub-2022-06-28-07-SWF702_ses-20220628_behavior+image+ophys.nwb
+# sub-2022-06-28-01-SWF702/sub-2022-06-28-01-SWF702_ses-20220628_behavior+image+ophys.nwb
+# sub-2022-06-14-01-SWF702/sub-2022-06-14-01-SWF702_ses-20220614_behavior+image+ophys.nwb
+# sub-2022-07-15-06-SWF702/sub-2022-07-15-06-SWF702_ses-20220715_behavior+image+ophys.nwb
+# sub-2022-07-15-12-SWF702/sub-2022-07-15-12-SWF702_ses-20220715_behavior+image+ophys.nwb
+# sub-2022-07-20-01-SWF702/sub-2022-07-20-01-SWF702_ses-20220720_behavior+image+ophys.nwb
+# sub-2022-08-02-01-SWF702/sub-2022-08-02-01-SWF702_ses-20220802_behavior+image+ophys.nwb
+# sub-2022-07-26-01-SWF702/sub-2022-07-26-01-SWF702_ses-20220726_behavior+image+ophys.nwb
+# sub-2022-12-21-06-SWF702/sub-2022-12-21-06-SWF702_ses-20221221_behavior+image+ophys.nwb
+# sub-2023-01-05-01-SWF702/sub-2023-01-05-01-SWF702_ses-20230105_behavior+image+ophys.nwb
+# sub-2023-01-05-18-SWF702/sub-2023-01-05-18-SWF702_ses-20230105_behavior+image+ophys.nwb
+# sub-2023-01-06-01-SWF702/sub-2023-01-06-01-SWF702_ses-20230106_behavior+image+ophys.nwb
+# sub-2023-01-06-08-SWF702/sub-2023-01-06-08-SWF702_ses-20230106_behavior+image+ophys.nwb
+# sub-2023-01-09-08-SWF702/sub-2023-01-09-08-SWF702_ses-20230109_behavior+image+ophys.nwb
+# sub-2023-01-09-15-SWF702/sub-2023-01-09-15-SWF702_ses-20230109_behavior+image+ophys.nwb
+# sub-2023-01-09-22-SWF702/sub-2023-01-09-22-SWF702_ses-20230109_behavior+image+ophys.nwb
+# sub-2023-01-10-07-SWF702/sub-2023-01-10-07-SWF702_ses-20230110_behavior+image+ophys.nwb
+# sub-2023-01-09-28-SWF702/sub-2023-01-09-28-SWF702_ses-20230109_behavior+image+ophys.nwb
+# sub-2023-01-10-14-SWF702/sub-2023-01-10-14-SWF702_ses-20230110_behavior+image+ophys.nwb
+# sub-2023-01-13-07-SWF702/sub-2023-01-13-07-SWF702_ses-20230113_behavior+image+ophys.nwb
+# sub-2023-01-16-01-SWF702/sub-2023-01-16-01-SWF702_ses-20230116_behavior+image+ophys.nwb
+# sub-2023-01-16-22-SWF702/sub-2023-01-16-22-SWF702_ses-20230116_behavior+image+ophys.nwb
+# sub-2023-01-16-08-SWF702/sub-2023-01-16-08-SWF702_ses-20230116_behavior+image+ophys.nwb
+# sub-2023-01-16-15-SWF702/sub-2023-01-16-15-SWF702_ses-20230116_behavior+image+ophys.nwb
+# sub-2023-01-17-01-SWF702/sub-2023-01-17-01-SWF702_ses-20230117_behavior+image+ophys.nwb
+# sub-2023-01-17-07-SWF702/sub-2023-01-17-07-SWF702_ses-20230117_behavior+image+ophys.nwb
+# sub-2023-01-17-14-SWF702/sub-2023-01-17-14-SWF702_ses-20230117_behavior+image+ophys.nwb
+# sub-2023-01-18-01-SWF702/sub-2023-01-18-01-SWF702_ses-20230118_behavior+image+ophys.nwb
+# sub-2023-01-19-15-SWF702/sub-2023-01-19-15-SWF702_ses-20230119_behavior+image+ophys.nwb
+# sub-2023-01-19-08-SWF702/sub-2023-01-19-08-SWF702_ses-20230119_behavior+image+ophys.nwb
+# sub-2023-01-19-22-SWF702/sub-2023-01-19-22-SWF702_ses-20230119_behavior+image+ophys.nwb
+# sub-2023-01-23-01-SWF702/sub-2023-01-23-01-SWF702_ses-20230123_behavior+image+ophys.nwb
+# sub-2023-01-23-08-SWF702/sub-2023-01-23-08-SWF702_ses-20230123_behavior+image+ophys.nwb
+# sub-2023-01-23-15-SWF702/sub-2023-01-23-15-SWF702_ses-20230123_behavior+image+ophys.nwb
+# sub-2023-01-23-21-SWF702/sub-2023-01-23-21-SWF702_ses-20230123_behavior+image+ophys.nwb
+# sub-2023-03-07-01-SWF702/sub-2023-03-07-01-SWF702_ses-20230307_behavior+image+ophys.nwb
